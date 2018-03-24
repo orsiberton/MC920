@@ -30,8 +30,9 @@ def main(arguments):
     labels, num_labels = measure.label(gray_image, return_num=True, background=255)
     props = measure.regionprops(labels, intensity_image=gray_image)
 
-    print_statistics(props)
+    num_small_regions, num_medium_regions, num_big_regions = print_statistics(props)
     save_labeled_image(image, props)
+    save_histogram_by_area(np.array([num_small_regions, num_medium_regions, num_big_regions]))
 
 
 def extract_gray_image(color_image):
@@ -86,6 +87,7 @@ def print_statistics(props):
     print("número de regiões pequenas: {}".format(num_small_regions))
     print("número de regiões médias: {}".format(num_medium_regions))
     print("número de regiões grandes: {}".format(num_big_regions))
+    return num_small_regions, num_medium_regions, num_big_regions
 
 
 def save_labeled_image(image, props):
@@ -101,6 +103,18 @@ def save_labeled_image(image, props):
     ax.set_yticks([])
 
     plt.savefig('labeled-image.png', bbox_inches='tight', pad_inches=0)
+
+
+def save_histogram_by_area(histogram_array):
+    # Generates the histogram image
+    fig, ax = plt.subplots()
+    ax.set_ylabel('Número de regiões')
+    ax.set_xlabel('Área(pequena, média e grande)')
+
+    ax.bar(250, histogram_array[0], 750, align='edge', color='blue')
+    ax.bar(1750, histogram_array[1], 750, align='edge', color='blue')
+    ax.bar(3250, histogram_array[2], 750, align='edge', color='blue')
+    plt.savefig('histogram.png')
 
 
 if __name__ == "__main__":
