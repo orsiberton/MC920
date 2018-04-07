@@ -17,6 +17,13 @@ def main(arguments):
     with open(arguments.input_text_path, 'r') as input_text_file:
         lines = input_text_file.read()
 
+    number_rows, number_cols, color_layer = input_image.shape
+
+    print(len(lines))
+    if number_rows * number_cols < len(lines) * 8 + 7 * 8:
+        print("Mensagem grande demais para ser escondida nesta imagem!")
+        return
+
     print("Codificando: \n{}".format(lines))
     binary_message = []
     for c in lines:
