@@ -26,7 +26,7 @@ def main(arguments):
     for c in "[#END#]":
         binary_message += get_binary_list_from_int(ord(c))
 
-    output_image = encode_message(int(arguments.bits_layer), input_image, binary_message)
+    output_image = encode_message(arguments.bits_layer, input_image, binary_message)
     misc.imsave(arguments.output_image, output_image)
 
     print()
@@ -43,7 +43,7 @@ def encode_message(bits_layer, input_image, binary_message):
         # for each column
         for column in range(256):
             # for each layer of color
-            for i in range(3):
+            for i in range(color_layer):
                 layer_binary = get_binary_list_from_int(output_image[row][column][i])
                 layer_binary[7 - bits_layer] = binary_message[binary_iterator]
                 output_image[row][column][i] = get_binary_list_to_int(layer_binary)
@@ -66,7 +66,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('input_image_path')
     parser.add_argument('input_text_path')
-    parser.add_argument('bits_layer')
+    parser.add_argument('bits_layer', type=int, choices=range(3), metavar="[0-2]")
     parser.add_argument('output_image')
     args = parser.parse_args()
 
