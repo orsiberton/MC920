@@ -1,5 +1,6 @@
 import argparse
 
+import numpy as np
 from scipy import misc
 
 
@@ -35,8 +36,34 @@ def main(arguments):
     output_image = encode_message(arguments.bits_layer, input_image, binary_message)
     misc.imsave(arguments.output_image, output_image)
 
+    save_bit_layer_as_image(output_image, 7)
+    save_bit_layer_as_image(output_image, 0)
+    save_bit_layer_as_image(output_image, 1)
+    save_bit_layer_as_image(output_image, 2)
+
     print()
     print("Codificação completa!")
+
+
+def save_bit_layer_as_image(image, bit_layer):
+    print("Gerando imagem {}-bit-layer".format(bit_layer))
+    number_rows, number_cols, color_layer = image.shape
+    layer_image = np.full(image.shape, 255, dtype=np.uint8)
+
+    # for each row
+    for row in range(number_rows):
+        # for each column
+        for column in range(number_cols):
+            # for each layer of color
+            for i in range(color_layer):
+                layer_binary = get_binary_list_from_int(image[row][column][i])
+                layer_bit = layer_binary[7 - bit_layer]
+                layer_binary = [0] * len(layer_binary)
+                layer_binary[7 - bit_layer] = layer_bit
+                layer_image[row][column][i] = get_binary_list_to_int(layer_binary)
+
+    misc.imsave("layer-{}.png".format(bit_layer), layer_image)
+    print("Pronto!")
 
 
 def encode_message(bits_layer, input_image, binary_message):
@@ -47,7 +74,7 @@ def encode_message(bits_layer, input_image, binary_message):
     # for each row
     for row in range(number_rows):
         # for each column
-        for column in range(256):
+        for column in range(number_cols):
             # for each layer of color
             for i in range(color_layer):
                 layer_binary = get_binary_list_from_int(output_image[row][column][i])

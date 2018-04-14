@@ -23,7 +23,7 @@ def main(arguments):
     # for each row
     for row in range(number_rows):
         # for each column
-        for column in range(256):
+        for column in range(number_cols):
             # for each layer of color
             for i in range(3):
                 binary_layer = get_binary_list_from_int(output_image[row][column][i])
