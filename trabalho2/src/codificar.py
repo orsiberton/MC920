@@ -20,7 +20,7 @@ def main(arguments):
 
     number_rows, number_cols, color_layer = input_image.shape
 
-    if number_rows * number_cols < len(lines) * 8 + 7 * 8:
+    if number_rows * number_cols * 3 < len(lines) * 8 + 7 * 8:
         print("Mensagem grande demais para ser escondida nesta imagem!")
         return
 
