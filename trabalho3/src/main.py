@@ -23,10 +23,11 @@ def main(arguments):
     else:
         angle = hough_method(original_gray_image)
 
-    print("The image should be fixed by {:.4f} degrees.".format(angle))
+    print("The image should be fixed by {:.2f} degrees.".format(angle))
 
     fixed_image = rotate_image(original_image, angle)
     misc.imsave(arguments.output_image, fixed_image)
+    print("Fixed image generated!")
 
 
 def horizontal_projection_method(image):
@@ -87,10 +88,9 @@ def rotate_image(image, angle):
 if __name__ == "__main__":
     # Parse the arguments
     parser = argparse.ArgumentParser()
-    # TODO remove default and nargs parameters after
-    parser.add_argument('input_image_path', default='../images/sample2.png', nargs='?')
-    parser.add_argument('mode', type=int, choices=range(2), metavar="[0-1]", default=1, nargs='?')
-    parser.add_argument('output_image', default='fixed_image.png', nargs='?')
+    parser.add_argument('input_image_path')
+    parser.add_argument('mode', type=int, choices=range(2), metavar="[0-1]")
+    parser.add_argument('output_image')
     args = parser.parse_args()
 
     main(args)
