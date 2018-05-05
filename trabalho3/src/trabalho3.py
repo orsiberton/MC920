@@ -89,7 +89,8 @@ if __name__ == "__main__":
     # Parse the arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('input_image_path')
-    parser.add_argument('mode', type=int, choices=range(2), metavar="[0-1]")
+    parser.add_argument('mode', type=int, choices=range(2), metavar="[0-1]",
+                        help="0 for horizontal projection mode and 1 for Hough mode")
     parser.add_argument('output_image')
     args = parser.parse_args()
 
