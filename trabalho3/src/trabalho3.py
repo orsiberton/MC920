@@ -1,5 +1,5 @@
 import argparse
-
+import pytesseract
 import numpy as np
 from scipy import misc
 from scipy.ndimage.interpolation import rotate
@@ -18,6 +18,8 @@ def main(arguments):
     original_image = read_image(arguments.input_image_path)
     original_gray_image = read_image(arguments.input_image_path, gray_scale=True)
 
+    print("Original image text: {}".format(pytesseract.image_to_string(original_image)))
+
     if alignment_algorithm[arguments.mode] == 'horizontal':
         angle = horizontal_projection_method(original_gray_image)
     else:
@@ -28,6 +30,7 @@ def main(arguments):
     fixed_image = rotate_image(original_image, angle)
     misc.imsave(arguments.output_image, fixed_image)
     print("Fixed image generated!")
+    print("Fixed image text: {}".format(pytesseract.image_to_string(fixed_image)))
 
 
 def horizontal_projection_method(image):
