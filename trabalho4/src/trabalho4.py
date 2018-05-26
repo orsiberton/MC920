@@ -1,4 +1,5 @@
 import argparse
+import math
 
 import numpy as np
 from scipy import misc
@@ -12,17 +13,20 @@ def main(arguments):
     # resized = misc.imresize(image, size=0.5, interp='nearest')
     # misc.imsave("resized_nearest.png", resized)
 
-    resized1 = nearest_neighbor(image, 0.5)
-    misc.imsave("resized_nearest.png", resized1)
-
-    resized2 = bilinear(image, 0.5)
-    misc.imsave("resized_bilinear.png", resized2)
-
-    resized3 = bicubic(image, 0.5)
-    misc.imsave("resized_bicubic.png", resized3)
+    # resized1 = nearest_neighbor(image, 0.5)
+    # misc.imsave("resized_nearest.png", resized1)
+    #
+    # resized2 = bilinear(image, 0.5)
+    # misc.imsave("resized_bilinear.png", resized2)
+    #
+    # resized3 = bicubic(image, 0.5)
+    # misc.imsave("resized_bicubic.png", resized3)
 
     resized4 = lagrange(image, 0.5)
     misc.imsave("resized_lagrange.png", resized4)
+
+    rotated = rotate_image(resized4, 20)
+    misc.imsave("rotated_image.png", rotated)
 
 
 def nearest_neighbor(image, scale):
@@ -158,6 +162,26 @@ def l_function(n, x, y, dx, image):
     v4 = dx * (dx + 1) * (dx - 1) * image[min(x + 2, image.shape[0] - 1), normalized_y]
 
     return (v1 / 6) + (v2 / 2) + (v3 / 2) + (v4 / 6)
+
+
+def rotate_image(image, angle):
+    print("Rotating image...")
+
+    rad_angle = np.deg2rad(angle)
+
+    rotated_image = np.full(image.shape, 255, dtype=np.uint8)
+    number_rows, number_cols = rotated_image.shape
+
+    # for each row
+    for row in range(number_rows):
+        # for each column
+        for column in range(number_cols):
+            x = min(round(row * math.cos(rad_angle) - column * math.sin(rad_angle)), rotated_image.shape[0] - 1)
+            y = min(round(row * math.sin(rad_angle) + column * math.cos(rad_angle)), rotated_image.shape[1] - 1)
+            rotated_image[x][y] = image[row][column]
+
+    print("Image rotated!")
+    return rotated_image
 
 
 def read_image(path, gray_scale=False):
