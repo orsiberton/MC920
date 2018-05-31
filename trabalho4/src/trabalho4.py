@@ -13,24 +13,25 @@ def main(arguments):
     # resized = misc.imresize(image, size=0.5, interp='nearest')
     # misc.imsave("resized_nearest.png", resized)
 
-    resized1 = nearest_neighbor(image, scale=0.5)
-    misc.imsave("resized_nearest.png", resized1)
-    rotated1 = nearest_neighbor(image, angle=45)
-    misc.imsave("rotated_nearest.png", rotated1)
+    # resized1 = nearest_neighbor(image, scale=0.5)
+    # misc.imsave("resized_nearest.png", resized1)
+    # rotated1 = nearest_neighbor(image, angle=45)
+    # misc.imsave("rotated_nearest.png", rotated1)
 
-    #
-    # resized2 = bilinear(image, 0.5)
+    # resized2 = bilinear(image, scale=0.5)
     # misc.imsave("resized_bilinear.png", resized2)
-    #
-    # resized3 = bicubic(image, 0.5)
-    # misc.imsave("resized_bicubic.png", resized3)
-    #
-    # resized4 = lagrange(image, 0.5)
-    # misc.imsave("resized_lagrange.png", resized4)
+    # rotated2 = bilinear(image, angle=45)
+    # misc.imsave("rotated_bilinear.png", rotated2)
 
-    # rotated = rotate_image(image, 40)
-    # misc.imsave("rotated_image.png", rotated)
-    # misc.imsave("rotated_image2.png", misc.imrotate(resized1, 45, interp='nearest'))
+    # resized3 = bicubic(image, scale=0.5)
+    # misc.imsave("resized_bicubic.png", resized3)
+    # rotated3 = bicubic(image, angle=45)
+    # misc.imsave("rotated_bicubic.png", rotated3)
+
+    resized4 = lagrange(image, scale=0.5)
+    misc.imsave("resized_lagrange.png", resized4)
+    rotated4 = lagrange(image, angle=45)
+    misc.imsave("rotated_lagrange.png", rotated4)
 
 
 def nearest_neighbor(image, scale=None, angle=None):
@@ -63,66 +64,129 @@ def nearest_neighbor(image, scale=None, angle=None):
                 if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
                     new_image[row][column] = image[x][y]
 
-    print("Image resized!")
+    if scale:
+        print("Image resized!")
+    else:
+        print("Image rotated!")
     return new_image
 
 
-def bilinear(image, scale):
+def bilinear(image, scale=None, angle=None):
     print("Using bilinear method...")
 
-    new_dimension = int(image.shape[0] * scale)
-    resized_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
-    number_rows, number_cols = resized_image.shape
+    if scale:
+        new_dimension = int(image.shape[0] * scale)
+        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+    else:
+        rad_angle = np.deg2rad(360 - angle)
+        new_image = np.full(image.shape, 255, dtype=np.uint8)
+
+    number_rows, number_cols = new_image.shape
+
+    x_center = number_rows / 2
+    y_center = number_cols / 2
 
     # for each row
     for row in range(number_rows):
         # for each column
         for column in range(number_cols):
-            x = int(row / scale)
-            y = int(column / scale)
-            dx = (row / scale) - x
-            dy = (column / scale) - y
-            x_plus_one = min(x + 1, image.shape[0] - 1)
-            y_plus_one = min(y + 1, image.shape[1] - 1)
 
-            new_value = (1 - dx) * (1 - dy) * image[x][y] + \
-                        dx * (1 - dy) * image[x_plus_one][y] + \
-                        (1 - dx) * dy * image[x][y_plus_one] + \
-                        dx * dy * image[x_plus_one][y_plus_one]
+            if scale:
+                x = int(row / scale)
+                y = int(column / scale)
+                dx = (row / scale) - x
+                dy = (column / scale) - y
+                x_plus_one = min(x + 1, image.shape[0] - 1)
+                y_plus_one = min(y + 1, image.shape[1] - 1)
 
-            resized_image[row][column] = new_value
+                new_value = (1 - dx) * (1 - dy) * image[x][y] + \
+                            dx * (1 - dy) * image[x_plus_one][y] + \
+                            (1 - dx) * dy * image[x][y_plus_one] + \
+                            dx * dy * image[x_plus_one][y_plus_one]
 
-    print("Image resized!")
-    return resized_image
+            else:
+                x = int((row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center)
+                y = int((row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center)
+                dx = (row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center - x
+                dy = (row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center - y
+
+                x_plus_one = min(x + 1, image.shape[0] - 1)
+                y_plus_one = min(y + 1, image.shape[1] - 1)
+
+                if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
+                    new_value = (1 - dx) * (1 - dy) * image[x][y] + \
+                                dx * (1 - dy) * image[x_plus_one][y] + \
+                                (1 - dx) * dy * image[x][y_plus_one] + \
+                                dx * dy * image[x_plus_one][y_plus_one]
+
+                    new_image[row][column] = new_value
+                else:
+                    new_value = 255
+
+            new_image[row][column] = new_value
+
+    if scale:
+        print("Image resized!")
+    else:
+        print("Image rotated!")
+    return new_image
 
 
-def bicubic(image, scale):
+def bicubic(image, scale=None, angle=None):
     print("Using bicubic method...")
 
-    new_dimension = int(image.shape[0] * scale)
-    resized_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
-    number_rows, number_cols = resized_image.shape
+    if scale:
+        new_dimension = int(image.shape[0] * scale)
+        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+    else:
+        rad_angle = np.deg2rad(360 - angle)
+        new_image = np.full(image.shape, 255, dtype=np.uint8)
+
+    number_rows, number_cols = new_image.shape
+    x_center = number_rows / 2
+    y_center = number_cols / 2
 
     # for each row
     for row in range(number_rows):
         # for each column
         for column in range(number_cols):
-            x = int(row / scale)
-            y = int(column / scale)
-            dx = (row / scale) - x
-            dy = (column / scale) - y
 
-            new_value = 0
-            for m in range(-1, 3):
-                for n in range(-1, 3):
-                    normalized_x = min(x + m, image.shape[0] - 1)
-                    normalized_y = min(y + n, image.shape[1] - 1)
-                    new_value += image[normalized_x][normalized_y] * r_function(m - dx) * r_function(dy - n)
+            if scale:
+                x = int(row / scale)
+                y = int(column / scale)
+                dx = (row / scale) - x
+                dy = (column / scale) - y
 
-            resized_image[row][column] = new_value
+                new_value = calculate_new_value(image, x, y, dx, dy)
+            else:
+                x = int((row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center)
+                y = int((row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center)
+                dx = (row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center - x
+                dy = (row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center - y
 
-    print("Image resized!")
-    return resized_image
+                if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
+                    new_value = calculate_new_value(image, x, y, dx, dy)
+                else:
+                    new_value = 255
+
+            new_image[row][column] = new_value
+
+    if scale:
+        print("Image resized!")
+    else:
+        print("Image rotated!")
+    return new_image
+
+
+def calculate_new_value(image, x, y, dx, dy):
+    new_value = 0
+    for m in range(-1, 3):
+        for n in range(-1, 3):
+            normalized_x = min(x + m, image.shape[0] - 1)
+            normalized_y = min(y + n, image.shape[1] - 1)
+            new_value += image[normalized_x][normalized_y] * r_function(m - dx) * r_function(dy - n)
+
+    return new_value
 
 
 def r_function(s):
@@ -141,26 +205,42 @@ def p_function(t):
         return 0
 
 
-def lagrange(image, scale):
+def lagrange(image, scale=None, angle=None):
     print("Using Lagrange method...")
 
-    new_dimension = int(image.shape[0] * scale)
-    resized_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
-    number_rows, number_cols = resized_image.shape
+    if scale:
+        new_dimension = int(image.shape[0] * scale)
+        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+    else:
+        rad_angle = np.deg2rad(360 - angle)
+        new_image = np.full(image.shape, 255, dtype=np.uint8)
+
+    number_rows, number_cols = new_image.shape
+    x_center = number_rows / 2
+    y_center = number_cols / 2
 
     # for each row
     for row in range(number_rows):
         # for each column
         for column in range(number_cols):
-            x = int(row / scale)
-            y = int(column / scale)
-            dx = (row / scale) - x
-            dy = (column / scale) - y
+            if scale:
+                x = int(row / scale)
+                y = int(column / scale)
+                dx = (row / scale) - x
+                dy = (column / scale) - y
 
-            resized_image[row][column] = calculate_lagrange(x, y, dx, dy, image)
+                new_image[row][column] = calculate_lagrange(x, y, dx, dy, image)
+            else:
+                x = int((row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center)
+                y = int((row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center)
+                dx = (row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center - x
+                dy = (row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center - y
+
+                if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
+                    new_image[row][column] = calculate_lagrange(x, y, dx, dy, image)
 
     print("Image resized!")
-    return resized_image
+    return new_image
 
 
 def calculate_lagrange(x, y, dx, dy, image):
