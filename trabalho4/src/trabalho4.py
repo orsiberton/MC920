@@ -4,42 +4,54 @@ import math
 import numpy as np
 from scipy import misc
 
+"""
+python3 trabalho4.py -a 98.75 -m 4 -i ../images/city.png -o transformed.png
+
+python3 trabalho4.py -e 0.7 -m 1 -i ../images/city.png -o transformed.png
+
+python3 trabalho4.py -d 700 400 -m 2 -i ../images/city.png -o transformed_new.png
+"""
+
 
 def main(arguments):
     print(arguments)
 
-    image = read_image("../images/baboon.png")
+    image = read_image(arguments.input_image)
 
-    # resized = misc.imresize(image, size=0.5, interp='nearest')
-    # misc.imsave("resized_nearest.png", resized)
+    scale = None
+    angle = None
+    if arguments.angle is not None:
+        angle = arguments.angle
+    elif arguments.scale is not None:
+        scale = arguments.scale
+    else:
+        scale = (arguments.dimension[1], arguments.dimension[0])
 
-    # resized1 = nearest_neighbor(image, scale=0.5)
-    # misc.imsave("resized_nearest.png", resized1)
-    # rotated1 = nearest_neighbor(image, angle=45)
-    # misc.imsave("rotated_nearest.png", rotated1)
+    print(angle, scale)
 
-    # resized2 = bilinear(image, scale=0.5)
-    # misc.imsave("resized_bilinear.png", resized2)
-    # rotated2 = bilinear(image, angle=45)
-    # misc.imsave("rotated_bilinear.png", rotated2)
+    if arguments.method == 1:
+        transformed_image = nearest_neighbor(image, scale=scale, angle=angle)
+    elif arguments.method == 2:
+        transformed_image = bilinear(image, scale=scale, angle=angle)
+    elif arguments.method == 3:
+        transformed_image = bicubic(image, scale=scale, angle=angle)
+    else:
+        transformed_image = lagrange(image, scale=scale, angle=angle)
 
-    # resized3 = bicubic(image, scale=0.5)
-    # misc.imsave("resized_bicubic.png", resized3)
-    # rotated3 = bicubic(image, angle=45)
-    # misc.imsave("rotated_bicubic.png", rotated3)
-
-    resized4 = lagrange(image, scale=0.5)
-    misc.imsave("resized_lagrange.png", resized4)
-    rotated4 = lagrange(image, angle=45)
-    misc.imsave("rotated_lagrange.png", rotated4)
+    misc.imsave(arguments.output_image, transformed_image)
 
 
 def nearest_neighbor(image, scale=None, angle=None):
     print("Using nearest neighbor method...")
 
     if scale:
-        new_dimension = int(image.shape[0] * scale)
-        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+        if isinstance(scale, tuple):
+            scale = (scale[0] / image.shape[0], scale[1] / image.shape[1])
+        else:
+            scale = (scale, scale)
+
+        new_dimension = (int(image.shape[0] * scale[0]), int(image.shape[1] * scale[1]))
+        new_image = np.full(new_dimension, 0, dtype=np.uint8)
     else:
         rad_angle = np.deg2rad(360 - angle)
         new_image = np.full(image.shape, 255, dtype=np.uint8)
@@ -55,8 +67,8 @@ def nearest_neighbor(image, scale=None, angle=None):
         for column in range(number_cols):
 
             if scale:
-                x = min(round(row / scale), image.shape[0] - 1)
-                y = min(round(column / scale), image.shape[1] - 1)
+                x = min(round(row / scale[0]), image.shape[0] - 1)
+                y = min(round(column / scale[1]), image.shape[1] - 1)
                 new_image[row][column] = image[x][y]
             else:
                 x = round((row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center)
@@ -75,8 +87,13 @@ def bilinear(image, scale=None, angle=None):
     print("Using bilinear method...")
 
     if scale:
-        new_dimension = int(image.shape[0] * scale)
-        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+        if isinstance(scale, tuple):
+            scale = (scale[0] / image.shape[0], scale[1] / image.shape[1])
+        else:
+            scale = (scale, scale)
+
+        new_dimension = (int(image.shape[0] * scale[0]), int(image.shape[1] * scale[1]))
+        new_image = np.full(new_dimension, 0, dtype=np.uint8)
     else:
         rad_angle = np.deg2rad(360 - angle)
         new_image = np.full(image.shape, 255, dtype=np.uint8)
@@ -92,10 +109,10 @@ def bilinear(image, scale=None, angle=None):
         for column in range(number_cols):
 
             if scale:
-                x = int(row / scale)
-                y = int(column / scale)
-                dx = (row / scale) - x
-                dy = (column / scale) - y
+                x = int(row / scale[0])
+                y = int(column / scale[1])
+                dx = (row / scale[0]) - x
+                dy = (column / scale[1]) - y
                 x_plus_one = min(x + 1, image.shape[0] - 1)
                 y_plus_one = min(y + 1, image.shape[1] - 1)
 
@@ -136,8 +153,13 @@ def bicubic(image, scale=None, angle=None):
     print("Using bicubic method...")
 
     if scale:
-        new_dimension = int(image.shape[0] * scale)
-        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+        if isinstance(scale, tuple):
+            scale = (scale[0] / image.shape[0], scale[1] / image.shape[1])
+        else:
+            scale = (scale, scale)
+
+        new_dimension = (int(image.shape[0] * scale[0]), int(image.shape[1] * scale[1]))
+        new_image = np.full(new_dimension, 0, dtype=np.uint8)
     else:
         rad_angle = np.deg2rad(360 - angle)
         new_image = np.full(image.shape, 255, dtype=np.uint8)
@@ -152,10 +174,10 @@ def bicubic(image, scale=None, angle=None):
         for column in range(number_cols):
 
             if scale:
-                x = int(row / scale)
-                y = int(column / scale)
-                dx = (row / scale) - x
-                dy = (column / scale) - y
+                x = int(row / scale[0])
+                y = int(column / scale[1])
+                dx = (row / scale[0]) - x
+                dy = (column / scale[1]) - y
 
                 new_value = calculate_new_value(image, x, y, dx, dy)
             else:
@@ -209,8 +231,13 @@ def lagrange(image, scale=None, angle=None):
     print("Using Lagrange method...")
 
     if scale:
-        new_dimension = int(image.shape[0] * scale)
-        new_image = np.full((new_dimension, new_dimension), 0, dtype=np.uint8)
+        if isinstance(scale, tuple):
+            scale = (scale[0] / image.shape[0], scale[1] / image.shape[1])
+        else:
+            scale = (scale, scale)
+
+        new_dimension = (int(image.shape[0] * scale[0]), int(image.shape[1] * scale[1]))
+        new_image = np.full(new_dimension, 0, dtype=np.uint8)
     else:
         rad_angle = np.deg2rad(360 - angle)
         new_image = np.full(image.shape, 255, dtype=np.uint8)
@@ -224,10 +251,10 @@ def lagrange(image, scale=None, angle=None):
         # for each column
         for column in range(number_cols):
             if scale:
-                x = int(row / scale)
-                y = int(column / scale)
-                dx = (row / scale) - x
-                dy = (column / scale) - y
+                x = int(row / scale[0])
+                y = int(column / scale[1])
+                dx = (row / scale[0]) - x
+                dy = (column / scale[1]) - y
 
                 new_image[row][column] = calculate_lagrange(x, y, dx, dy, image)
             else:
@@ -239,7 +266,10 @@ def lagrange(image, scale=None, angle=None):
                 if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
                     new_image[row][column] = calculate_lagrange(x, y, dx, dy, image)
 
-    print("Image resized!")
+    if scale:
+        print("Image resized!")
+    else:
+        print("Image rotated!")
     return new_image
 
 
@@ -262,31 +292,6 @@ def l_function(n, x, y, dx, image):
     return (v1 / 6) + (v2 / 2) + (v3 / 2) + (v4 / 6)
 
 
-def rotate_image(image, angle):
-    print("Rotating image...")
-
-    rad_angle = np.deg2rad(360 - angle)
-
-    rotated_image = np.full(image.shape, 255, dtype=np.uint8)
-    number_rows, number_cols = rotated_image.shape
-
-    x_center = number_rows / 2
-    y_center = number_cols / 2
-
-    # for each row
-    for row in range(number_rows):
-        # for each column
-        for column in range(number_cols):
-            x = round((row - x_center) * math.cos(rad_angle) - (column - y_center) * math.sin(rad_angle) + x_center)
-            y = round((row - x_center) * math.sin(rad_angle) + (column - y_center) * math.cos(rad_angle) + y_center)
-
-            if 0 <= x <= number_rows - 1 and 0 <= y <= number_cols - 1:
-                rotated_image[row][column] = image[x][y]
-
-    print("Image rotated!")
-    return rotated_image
-
-
 def read_image(path, gray_scale=False):
     # Open desired image
     input_image = None
@@ -302,7 +307,29 @@ def read_image(path, gray_scale=False):
 if __name__ == "__main__":
     # Parse the arguments
     parser = argparse.ArgumentParser()
-    # TODO parse arguments
+    parser.add_argument("-a", "--angle", type=float, required=False)
+    parser.add_argument("-e", "--scale", type=float, required=False)
+    parser.add_argument("-d", "--dimension", type=int, nargs=2, required=False)
+    parser.add_argument("-m", "--method", type=int, required=True, choices=range(1, 5), metavar="[1-4]",
+                        help='1 - nearest_neighbor | 2 - bilinear | 3 - bicubic | 4 - lagrange')
+    parser.add_argument("-i", "--input_image", required=True)
+    parser.add_argument("-o", "--output_image", required=True)
+
     args = parser.parse_args()
+
+    count_args = 0
+    if args.angle is not None:
+        count_args += 1
+    if args.scale is not None:
+        count_args += 1
+    if args.dimension is not None:
+        count_args += 1
+
+    if count_args > 1:
+        print("Choose only one between angle, scale and dimension")
+        exit()
+    elif count_args == 0:
+        print("Choose one between angle, scale and dimension")
+        exit()
 
     main(args)
