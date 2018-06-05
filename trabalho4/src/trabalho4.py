@@ -14,8 +14,6 @@ python3 trabalho4.py -d 700 400 -m 2 -i ../images/city.png -o transformed_new.pn
 
 
 def main(arguments):
-    print(arguments)
-
     image = read_image(arguments.input_image)
 
     scale = None
@@ -26,8 +24,6 @@ def main(arguments):
         scale = arguments.scale
     else:
         scale = (arguments.dimension[1], arguments.dimension[0])
-
-    print(angle, scale)
 
     if arguments.method == 1:
         transformed_image = nearest_neighbor(image, scale=scale, angle=angle)
